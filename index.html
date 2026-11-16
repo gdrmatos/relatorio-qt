@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório para Solicitação de Tratamento Oncológico</title>
+<style>
+  :root {
+    --azul: #1a5276;
+    --azul-claro: #2980b9;
+    --cinza: #f4f6f7;
+    --borda: #d5dbdb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    background: var(--cinza);
+    color: #2c3e50;
+  }
+  header {
+    background: var(--azul);
+    color: #fff;
+    padding: 16px 24px;
+  }
+  header h1 { margin: 0; font-size: 1.3rem; }
+  header p { margin: 4px 0 0; font-size: 0.85rem; opacity: 0.85; }
+  main {
+    max-width: 1150px;
+    margin: 24px auto;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 1.05rem;
+    color: var(--azul);
+    border-bottom: 2px solid var(--cinza);
+    padding-bottom: 8px;
+  }
+  fieldset {
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    margin: 0 0 16px;
+    padding: 12px;
+  }
+  legend { font-weight: 600; font-size: 0.9rem; color: var(--azul-claro); padding: 0 6px; }
+  legend .opcional { font-weight: normal; font-size: 0.78rem; color: #888; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin: 10px 0 4px; }
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--borda);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; }
+  .linha { display: flex; gap: 10px; flex-wrap: wrap; }
+  .linha > div { flex: 1; min-width: 90px; }
+  .check-inline {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: normal; margin-top: 6px;
+  }
+  .check-inline input { width: auto; }
+  .areas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 6px; }
+  .areas label { display: flex; align-items: center; gap: 6px; font-weight: normal; font-size: 0.82rem; margin: 2px 0; }
+  .areas input { width: auto; }
+  @media (max-width: 520px) { .areas { grid-template-columns: 1fr; } }
+  table.medicamentos { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  table.medicamentos th {
+    font-size: 0.76rem; text-align: left; color: #555;
+    padding: 4px 6px 4px 0;
+  }
+  table.medicamentos td { padding: 3px 6px 3px 0; vertical-align: top; }
+  table.medicamentos input, table.medicamentos select { padding: 6px; font-size: 0.84rem; }
+  .btn {
+    background: var(--azul-claro);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--azul); }
+  .btn.secundario { background: #7f8c8d; }
+  .btn.secundario:hover { background: #626e70; }
+  .btn.pequeno { padding: 5px 10px; font-size: 0.8rem; }
+  .btn.remover { background: #c0392b; padding: 5px 9px; font-size: 0.8rem; }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .resultado {
+    background: #eef6fb; border: 1px solid #cfe2f3; border-radius: 5px;
+    padding: 8px 10px; font-size: 0.85rem; margin-top: 8px;
+  }
+  .resultado b { color: var(--azul); }
+  .calc-box {
+    background: #fbfcfc; border: 1px dashed var(--borda); border-radius: 6px;
+    padding: 10px 12px; margin-top: 10px;
+  }
+  .calc-box h4 { margin: 0 0 6px; font-size: 0.85rem; color: var(--azul-claro); }
+  #relatorio {
+    white-space: pre-wrap;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    background: #fdfefe;
+    border: 1px dashed var(--borda);
+    border-radius: 6px;
+    padding: 18px;
+    min-height: 300px;
+  }
+  .dica { font-size: 0.78rem; color: #666; margin: 6px 0; }
+  .aviso {
+    font-size: 0.78rem; color: #1e8449; background: #eafaf1;
+    border-radius: 5px; padding: 8px 10px; margin-top: 14px;
+  }
+  @media print {
+    body * { visibility: hidden; }
+    #relatorio, #relatorio * { visibility: visible; }
+    #relatorio {
+      position: absolute; left: 0; top: 0; width: 100%;
+      border: none; padding: 0; font-size: 12pt;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Relatório para Solicitação de Tratamento Oncológico</h1>
+  <p>Preencha os campos, gere o relatório e copie ou imprima (PDF). Nenhum dado sai do seu computador.</p>
+</header>
+
+<main>
+  <!-- ==================== FORMULÁRIO ==================== -->
+  <section class="card">
+    <h2>Dados da solicitação</h2>
+
+    <fieldset>
+      <legend>Paciente</legend>
+      <label for="nomePaciente">Nome do paciente</label>
+      <input type="text" id="nomePaciente" placeholder="Nome completo">
+    </fieldset>
+
+    <fieldset>
+      <legend>Diagnóstico</legend>
+      <label for="cidBusca">Buscar CID-10 (digite código ou nome do tumor)</label>
+      <input type="text" id="cidBusca" list="cidLista" placeholder="Ex.: C50 ou mama" autocomplete="off">
+      <datalist id="cidLista"></datalist>
+      <div class="linha">
+        <div style="flex: 2;">
+          <label for="diagnostico">Nome do diagnóstico</label>
+          <input type="text" id="diagnostico" placeholder="Descrição do diagnóstico">
+        </div>
+        <div>
+          <label for="cid10">CID-10 topográfico</label>
+          <input type="text" id="cid10" placeholder="Ex.: C50.9">
+        </div>
+      </div>
+      <label for="estadiamento">Estadiamento inicial (TNM e estádio agrupado)</label>
+      <input type="text" id="estadiamento" placeholder="Ex.: EC IIA (T2 N0 M0)">
+      <label class="check-inline">
+        <input type="checkbox" id="estadiamentoNA"> Não se aplica (suprime a cláusula de estadiamento)
+      </label>
+      <div class="linha">
+        <div>
+          <label for="dataDiagnostico">Diagnosticado em</label>
+          <input type="text" id="dataDiagnostico" placeholder="Ex.: 03/2026 ou março de 2026">
+        </div>
+      </div>
+      <label for="histopatologico">Exame anátomo-patológico (descrição histopatológica)</label>
+      <textarea id="histopatologico" rows="2" placeholder="Ex.: adenocarcinoma invasivo, ..."></textarea>
+      <label for="quadroClinico">Quadro clínico <span style="font-weight:normal;color:#888">(opcional — some do texto se vazio)</span></label>
+      <textarea id="quadroClinico" rows="2" placeholder="Ex.: ECOG 1, boa reserva orgânica, ..."></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dados antropométricos e cálculos <span class="opcional">(opcional — apoio à prescrição)</span></legend>
+      <div class="linha">
+        <div>
+          <label for="idade">Idade (anos)</label>
+          <input type="number" id="idade" min="0" max="130" placeholder="Ex.: 62">
+        </div>
+        <div>
+          <label for="sexo">Sexo</label>
+          <select id="sexo">
+            <option value="">—</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+      </div>
+      <div class="linha">
+        <div>
+          <label for="peso">Peso (kg)</label>
+          <input type="number" id="peso" min="0" step="0.1" placeholder="Ex.: 70">
+        </div>
+        <div>
+          <label for="altura">Altura (cm)</label>
+          <input type="number" id="altura" min="0" step="0.1" placeholder="Ex.: 168">
+        </div>
+        <div>
+          <label for="creatinina">Creatinina (mg/dL)</label>
+          <input type="number" id="creatinina" min="0" step="0.01" placeholder="Ex.: 0.9">
+        </div>
+      </div>
+      <label for="formulaSC">Fórmula da superfície corporal</label>
+      <select id="formulaSC">
+        <option value="dubois">DuBois</option>
+        <option value="mosteller">Mosteller</option>
+      </select>
+      <div class="resultado">
+        Superfície corporal (<span id="outSCnome">DuBois</span>): <b id="outSC">—</b> m²<br>
+        Clearance de creatinina (Cockcroft-Gault): <b id="outClCr">—</b> mL/min
+      </div>
+
+      <div class="calc-box">
+        <h4>🧮 Calculadora de dose em mg/m²</h4>
+        <div class="linha" style="align-items: flex-end;">
+          <div>
+            <label for="dosePorM2">Dose (mg/m²)</label>
+            <input type="number" id="dosePorM2" step="0.1" placeholder="Ex.: 85">
+          </div>
+          <div style="flex: 0 0 auto;">
+            <button type="button" class="btn pequeno" onclick="calcularMgM2()">Calcular</button>
+          </div>
+        </div>
+        <div class="resultado" id="outMgM2">Preencha peso e altura acima e informe a dose por m².</div>
+      </div>
+
+      <div class="calc-box">
+        <h4>🧮 Calculadora de Calvert (carboplatina)</h4>
+        <p class="dica" style="margin-top:0;">Dose (mg) = AUC × (TFG + 25). A TFG usa o clearance de creatinina calculado acima.</p>
+        <div class="linha" style="align-items: flex-end;">
+          <div>
+            <label for="aucAlvo">AUC alvo</label>
+            <input type="number" id="aucAlvo" step="0.1" placeholder="Ex.: 5">
+          </div>
+          <div>
+            <label for="tfgManual">TFG (mL/min) <span style="font-weight:normal">opc.</span></label>
+            <input type="number" id="tfgManual" step="1" placeholder="auto (ClCr)">
+          </div>
+          <div style="flex: 0 0 auto;">
+            <button type="button" class="btn pequeno" onclick="calcularCalvert()">Calcular</button>
+          </div>
+        </div>
+        <label class="check-inline">
+          <input type="checkbox" id="tetoTFG"> Limitar TFG a 125 mL/min (evita superdosagem em função renal normal)
+        </label>
+        <div class="resultado" id="outCalvert">Informe o AUC alvo. Se não digitar a TFG, será usado o ClCr calculado.</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tratamento solicitado</legend>
+      <label for="regime">Nome do regime</label>
+      <input type="text" id="regime" placeholder="Ex.: FOLFOX-6 modificado">
+
+      <label>Drogas (nome, dose, via, dia(s) e frequência)</label>
+      <table class="medicamentos">
+        <thead>
+          <tr>
+            <th style="width: 24%;">Droga</th>
+            <th style="width: 20%;">Dose</th>
+            <th style="width: 15%;">Via</th>
+            <th style="width: 15%;">Dia(s)</th>
+            <th style="width: 19%;">Frequência</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="listaMedicamentos"></tbody>
+      </table>
+      <button type="button" class="btn secundario pequeno" onclick="adicionarMedicamento()">+ Adicionar droga</button>
+      <p class="dica">Use "Dia(s)" para esquemas de mais de um dia — ex.: <code>D1–D5</code>, <code>D1 e D8</code>, <code>D8–D21</code>. "Frequência" é a repetição do ciclo (ex.: a cada 21 dias). Para drogas <b>VO</b>, aparece um campo para o total de comprimidos.</p>
+
+      <div class="linha" style="margin-top: 12px;">
+        <div>
+          <label for="intencao">Intenção do tratamento</label>
+          <select id="intencao">
+            <option value="">Selecione…</option>
+            <option>Curativo</option>
+            <option>Neoadjuvante</option>
+            <option>Adjuvante</option>
+            <option>Paliativo</option>
+            <option>Controle</option>
+            <option>Suporte</option>
+          </select>
+        </div>
+        <div>
+          <label for="periodoPrevisto">Duração estimada do tratamento</label>
+          <input type="text" id="periodoPrevisto" placeholder="Ex.: 12 ciclos (aprox. 6 meses)">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Justificativa clínica <span class="opcional">(opcional — evidências, diretrizes, artigos)</span></legend>
+      <label for="justificativa">Justificativa</label>
+      <textarea id="justificativa" rows="3" placeholder="Ex.: Conforme diretriz NCCN v.X.2026 e estudo XXX (NEJM 2023)..."></textarea>
+      <p class="dica">Só aparece no laudo quando preenchida.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Médico solicitante</legend>
+      <label for="medico">Nome</label>
+      <input type="text" id="medico" placeholder="Dr(a). ...">
+      <div class="linha">
+        <div style="flex: 0 0 70px;">
+          <label for="uf">UF</label>
+          <input type="text" id="uf" maxlength="2" placeholder="SP">
+        </div>
+        <div>
+          <label for="crm">CRM (número)</label>
+          <input type="text" id="crm" placeholder="000000">
+        </div>
+        <div>
+          <label for="rqe">RQE (número)</label>
+          <input type="text" id="rqe" placeholder="00000">
+        </div>
+      </div>
+      <label>Área(s) de atuação <span style="font-weight:normal;color:#888">(marque nenhuma, uma ou várias)</span></label>
+      <div class="areas" id="areasAtuacao"></div>
+    </fieldset>
+
+    <div class="acoes">
+      <button type="button" class="btn" onclick="gerarRelatorio()">Gerar relatório</button>
+      <button type="button" class="btn secundario" onclick="limparFormulario()">Limpar</button>
+    </div>
+
+    <p class="aviso">🔒 Nenhum dado é enviado pela internet nem armazenado no navegador (sem cookies, cache ou histórico). Os campos ficam apenas na memória e são apagados ao recarregar ou fechar a página. O relatório fica disponível para copiar ou baixar como arquivo.</p>
+  </section>
+
+  <!-- ==================== RELATÓRIO ==================== -->
+  <section class="card">
+    <h2>Relatório gerado</h2>
+    <div id="relatorio">O relatório aparecerá aqui após clicar em “Gerar relatório”.</div>
+    <div class="acoes">
+      <button type="button" class="btn" onclick="copiarRelatorio()">Copiar texto</button>
+      <button type="button" class="btn secundario" onclick="window.print()">Imprimir / Salvar PDF</button>
+    </div>
+    <label style="margin-top: 14px;">Baixar como arquivo</label>
+    <div class="acoes" style="margin-top: 4px;">
+      <button type="button" class="btn" onclick="baixar('docx')">.docx</button>
+      <button type="button" class="btn" onclick="baixar('odt')">.odt</button>
+      <button type="button" class="btn" onclick="baixar('rtf')">.rtf</button>
+      <button type="button" class="btn" onclick="baixar('txt')">.txt</button>
+    </div>
+    <p class="dica">O download regenera o relatório a partir dos campos atuais.</p>
+  </section>
+</main>
+
+<script src="cid10.js"></script>
+<script>
+const AREAS = [
+  "Oncologia de Trato Gastrointestinal",
+  "Oncologista de Mama",
+  "Oncologista Ginecológico",
+  "Oncologista Torácico",
+  "Oncologista de Cabeça e Pescoço",
+  "Oncologista de Trato Genitourinário",
+  "Oncologista de Pele",
+  "Sarcomas",
+  "Neuro-Oncologista"
+];
+
+const MODELO_PADRAO = `RELATÓRIO MÉDICO
+
+Paciente {{nome_paciente}}{{idade_frag}}, é portador(a) do diagnóstico {{diagnostico}}, {{cid10}}, {{estadiamento_frag}}diagnosticado em {{data_diagnostico}}, como evidenciado no exame anátomo-patológico de {{histopatologico}}.
+
+Dessa forma, considerando também {{quadro_frag}}as melhores evidências disponíveis, prescrevo:
+
+1- {{regime}}, com as drogas nas seguintes doses:
+{{medicamentos}}
+
+Intenção do tratamento: {{intencao}}
+Duração estimada do tratamento: {{periodo_previsto}}
+
+{{justificativa_bloco}}Atenciosamente,
+
+
+{{medico}}
+{{area_atuacao}}
+CRM {{uf}} {{crm}} / RQE {{rqe}}`;
+
+// ---------- CID-10 ----------
+function inicializarCID() {
+  const datalist = document.getElementById("cidLista");
+  (window.CID10 || []).forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = `${item.c} — ${item.d}`;
+    datalist.appendChild(opt);
+  });
+  document.getElementById("cidBusca").addEventListener("change", aplicarCID);
+}
+function aplicarCID() {
+  const texto = document.getElementById("cidBusca").value;
+  const sep = texto.indexOf("—");
+  if (sep === -1) return;
+  const codigo = texto.slice(0, sep).trim();
+  const desc = texto.slice(sep + 1).trim();
+  document.getElementById("cid10").value = codigo;
+  const campoDiag = document.getElementById("diagnostico");
+  if (!campoDiag.value.trim()) campoDiag.value = desc;
+}
+
+// ---------- Áreas de atuação ----------
+function inicializarAreas() {
+  const cont = document.getElementById("areasAtuacao");
+  AREAS.forEach((area, i) => {
+    const lbl = document.createElement("label");
+    lbl.innerHTML = `<input type="checkbox" class="area-chk" value="${area}"> ${area}`;
+    cont.appendChild(lbl);
+  });
+}
+function coletarAreas() {
+  return [...document.querySelectorAll(".area-chk:checked")].map(c => c.value);
+}
+
+// ---------- Medicamentos ----------
+function toggleComp(sel) {
+  const comp = sel.closest("td").querySelector(".med-comp");
+  if (sel.value === "VO") {
+    comp.style.display = "";
+  } else {
+    comp.style.display = "none";
+    comp.value = "";
+  }
+}
+function adicionarMedicamento(nome = "", dose = "", via = "", dias = "", freq = "", comp = "") {
+  const tbody = document.getElementById("listaMedicamentos");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input type="text" class="med-nome" placeholder="Ex.: Oxaliplatina" value="${nome}"></td>
+    <td><input type="text" class="med-dose" placeholder="Ex.: 85 mg/m²" value="${dose}"></td>
+    <td>
+      <select class="med-via" onchange="toggleComp(this)">
+        <option value="">—</option>
+        <option ${via === "EV" ? "selected" : ""}>EV</option>
+        <option ${via === "VO" ? "selected" : ""}>VO</option>
+        <option ${via === "SC" ? "selected" : ""}>SC</option>
+      </select>
+      <input type="number" min="0" step="1" class="med-comp" title="Total de comprimidos" placeholder="nº comp." value="${comp}" style="display:none; margin-top:4px;">
+    </td>
+    <td><input type="text" class="med-dias" placeholder="Ex.: D1–D5" value="${dias}"></td>
+    <td><input type="text" class="med-freq" placeholder="Ex.: a cada 14 dias" value="${freq}"></td>
+    <td><button type="button" class="btn remover" title="Remover" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  toggleComp(tr.querySelector(".med-via"));
+}
+function coletarMedicamentos() {
+  const linhas = document.querySelectorAll("#listaMedicamentos tr");
+  const itens = [];
+  linhas.forEach(tr => {
+    const nome = tr.querySelector(".med-nome").value.trim();
+    const dose = tr.querySelector(".med-dose").value.trim();
+    const via = tr.querySelector(".med-via").value;
+    const dias = tr.querySelector(".med-dias").value.trim();
+    const freq = tr.querySelector(".med-freq").value.trim();
+    const comp = tr.querySelector(".med-comp").value.trim();
+    if (nome) {
+      const partes = [dose, via, dias, freq];
+      if (via === "VO" && comp) partes.push(`total de ${comp} comprimidos`);
+      const detalhes = partes.filter(Boolean).join(", ");
+      itens.push(detalhes ? `- ${nome} — ${detalhes}` : `- ${nome}`);
+    }
+  });
+  return itens.join("\n") || "____";
+}
+
+// ---------- Cálculos ----------
+function num(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? null : v;
+}
+function nomeFormulaSC() {
+  return document.getElementById("formulaSC").value === "mosteller" ? "Mosteller" : "DuBois";
+}
+function calcularSC() {
+  const peso = num("peso"), altura = num("altura");
+  if (peso && altura) {
+    if (document.getElementById("formulaSC").value === "mosteller") {
+      return Math.sqrt((altura * peso) / 3600);
+    }
+    return 0.007184 * Math.pow(peso, 0.425) * Math.pow(altura, 0.725);
+  }
+  return null;
+}
+function calcularClCr() {
+  const idade = num("idade"), peso = num("peso"), cr = num("creatinina");
+  const sexo = document.getElementById("sexo").value;
+  if (idade && peso && cr && sexo) {
+    const fator = sexo === "F" ? 0.85 : 1;
+    return ((140 - idade) * peso * fator) / (72 * cr);
+  }
+  return null;
+}
+function atualizarCalculos() {
+  const sc = calcularSC(), clcr = calcularClCr();
+  document.getElementById("outSCnome").textContent = nomeFormulaSC();
+  document.getElementById("outSC").textContent = sc ? sc.toFixed(2) : "—";
+  document.getElementById("outClCr").textContent = clcr ? clcr.toFixed(1) : "—";
+}
+function calcularMgM2() {
+  const sc = calcularSC(), dose = num("dosePorM2");
+  const out = document.getElementById("outMgM2");
+  if (!sc) { out.textContent = "Informe peso e altura para calcular a superfície corporal."; return; }
+  if (!dose) { out.textContent = "Informe a dose por m²."; return; }
+  out.innerHTML = `Dose total: <b>${(dose * sc).toFixed(1)} mg</b> (= ${dose} mg/m² × ${sc.toFixed(2)} m²)`;
+}
+function calcularCalvert() {
+  const auc = num("aucAlvo");
+  let tfg = num("tfgManual");
+  const out = document.getElementById("outCalvert");
+  if (tfg === null) tfg = calcularClCr();
+  if (!auc) { out.textContent = "Informe o AUC alvo."; return; }
+  if (!tfg) { out.textContent = "Informe a TFG ou preencha idade, sexo, peso e creatinina para estimar o ClCr."; return; }
+  let nota = "";
+  if (document.getElementById("tetoTFG").checked && tfg > 125) { tfg = 125; nota = " — TFG limitada a 125 mL/min"; }
+  out.innerHTML = `Dose de carboplatina: <b>${(auc * (tfg + 25)).toFixed(0)} mg</b> (= AUC ${auc} × [TFG ${tfg.toFixed(1)} + 25])${nota}`;
+}
+
+// ---------- Estadiamento "não se aplica" ----------
+let chkNA, campoEstadiamento;
+
+// ---------- Geração do relatório ----------
+function val(id) { return document.getElementById(id).value.trim(); }
+function valOr(id, padrao) { return val(id) || padrao; }
+
+function gerarRelatorio() {
+  const idade = num("idade");
+  const estad = val("estadiamento");
+  const quadro = val("quadroClinico");
+  const justificativa = val("justificativa");
+  const sc = calcularSC(), clcr = calcularClCr();
+  const areas = coletarAreas();
+
+  const dados = {
+    nome_paciente: valOr("nomePaciente", "____"),
+    idade_frag: idade ? `, ${idade} anos` : "",
+    diagnostico: valOr("diagnostico", "____"),
+    cid10: valOr("cid10", "____"),
+    estadiamento_frag: (!chkNA.checked && estad) ? `estadiamento ${estad}, ` : "",
+    data_diagnostico: valOr("dataDiagnostico", "____"),
+    histopatologico: valOr("histopatologico", "____"),
+    quadro_frag: quadro ? `o quadro clínico do(a) paciente (${quadro}) e ` : "",
+    regime: valOr("regime", "____"),
+    medicamentos: coletarMedicamentos(),
+    intencao: valOr("intencao", "____"),
+    periodo_previsto: valOr("periodoPrevisto", "____"),
+    medico: valOr("medico", "____"),
+    area_atuacao: areas.length ? `Oncologista Clínico - ${areas.join("; ")}` : "Oncologista Clínico",
+    uf: valOr("uf", "__").toUpperCase(),
+    crm: valOr("crm", "______"),
+    rqe: valOr("rqe", "______"),
+    data: new Date().toLocaleDateString("pt-BR"),
+    // extras opcionais
+    superficie_corporal: sc ? `${sc.toFixed(2)} m² (${nomeFormulaSC()})` : "",
+    clcr: clcr ? `${clcr.toFixed(1)} mL/min` : "",
+    justificativa: justificativa,
+    justificativa_bloco: justificativa ? `Justificativa clínica: ${justificativa}\n\n` : ""
+  };
+
+  let texto = MODELO_PADRAO;
+  for (const [chave, valor] of Object.entries(dados)) {
+    texto = texto.replaceAll(`{{${chave}}}`, valor);
+  }
+  texto = texto.replace(/\n{4,}/g, "\n\n\n").trim();
+  document.getElementById("relatorio").textContent = texto;
+}
+
+// ---------- Ações ----------
+function copiarRelatorio() {
+  navigator.clipboard.writeText(document.getElementById("relatorio").textContent).then(() => {
+    alert("Relatório copiado para a área de transferência.");
+  });
+}
+function limparFormulario() {
+  if (!confirm("Limpar todos os campos?")) return;
+  document.querySelectorAll("main input, main select, main textarea").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else if (el.tagName === "SELECT") el.selectedIndex = 0;
+    else el.value = "";
+  });
+  campoEstadiamento.disabled = false;
+  document.getElementById("listaMedicamentos").innerHTML = "";
+  adicionarMedicamento();
+  atualizarCalculos();
+  document.getElementById("outMgM2").textContent = "Preencha peso e altura acima e informe a dose por m².";
+  document.getElementById("outCalvert").textContent = "Informe o AUC alvo. Se não digitar a TFG, será usado o ClCr calculado.";
+  document.getElementById("relatorio").textContent = "O relatório aparecerá aqui após clicar em “Gerar relatório”.";
+}
+
+// ==================== EXPORTAÇÃO DE ARQUIVOS ====================
+// Tudo gerado localmente no navegador — nenhum dado é enviado à internet.
+
+// --- CRC32 (necessário para o ZIP de .docx e .odt) ---
+const _crcTable = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = _crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// --- Montador de ZIP (método "store", sem compressão) ---
+function zipStore(files) {
+  const enc = new TextEncoder();
+  const u16 = n => [n & 0xFF, (n >> 8) & 0xFF];
+  const u32 = n => [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >> 24) & 0xFF];
+  const chunks = [], central = [];
+  let offset = 0;
+  files.forEach(f => {
+    const nameBytes = enc.encode(f.name);
+    const data = f.bytes;
+    const crc = crc32(data);
+    const local = [].concat(
+      u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(data.length), u32(data.length),
+      u16(nameBytes.length), u16(0)
+    );
+    chunks.push(new Uint8Array(local), nameBytes, data);
+    central.push({ nameBytes, crc, size: data.length, offset });
+    offset += local.length + nameBytes.length + data.length;
+  });
+  const centralChunks = [];
+  let centralSize = 0;
+  central.forEach(c => {
+    const hdr = [].concat(
+      u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(c.crc), u32(c.size), u32(c.size),
+      u16(c.nameBytes.length), u16(0), u16(0), u16(0), u16(0),
+      u32(0), u32(c.offset)
+    );
+    const arr = new Uint8Array(hdr.length + c.nameBytes.length);
+    arr.set(hdr, 0);
+    arr.set(c.nameBytes, hdr.length);
+    centralChunks.push(arr);
+    centralSize += arr.length;
+  });
+  const end = [].concat(
+    u32(0x06054b50), u16(0), u16(0),
+    u16(files.length), u16(files.length),
+    u32(centralSize), u32(offset), u16(0)
+  );
+  return new Blob(chunks.concat(centralChunks, [new Uint8Array(end)]), { type: "application/octet-stream" });
+}
+
+function escXml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// --- .docx ---
+function gerarDocxBlob(texto) {
+  const enc = new TextEncoder();
+  const paras = texto.split("\n")
+    .map(l => `<w:p><w:r><w:t xml:space="preserve">${escXml(l)}</w:t></w:r></w:p>`).join("");
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}<w:sectPr/></w:body></w:document>`;
+  return zipStore([
+    { name: "[Content_Types].xml", bytes: enc.encode(contentTypes) },
+    { name: "_rels/.rels", bytes: enc.encode(rels) },
+    { name: "word/document.xml", bytes: enc.encode(doc) }
+  ]);
+}
+
+// --- .odt ---
+function gerarOdtBlob(texto) {
+  const enc = new TextEncoder();
+  const paras = texto.split("\n").map(l => `<text:p>${escXml(l)}</text:p>`).join("");
+  const content = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.2"><office:body><office:text>${paras}</office:text></office:body></office:document-content>`;
+  const manifest = `<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>`;
+  return zipStore([
+    { name: "mimetype", bytes: enc.encode("application/vnd.oasis.opendocument.text") },
+    { name: "content.xml", bytes: enc.encode(content) },
+    { name: "META-INF/manifest.xml", bytes: enc.encode(manifest) }
+  ]);
+}
+
+// --- .rtf ---
+function gerarRtf(texto) {
+  let out = "";
+  for (const ch of texto) {
+    const code = ch.codePointAt(0);
+    if (ch === "\n") out += "\\par\n";
+    else if (ch === "\\") out += "\\\\";
+    else if (ch === "{") out += "\\{";
+    else if (ch === "}") out += "\\}";
+    else if (code > 127) out += `\\u${code}?`;
+    else out += ch;
+  }
+  return `{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0 Times New Roman;}}\\fs24 ${out}}`;
+}
+
+// --- Download ---
+function baixarBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function nomeArquivo(ext) {
+  const base = (val("nomePaciente") || "relatorio")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "relatorio";
+  const hoje = new Date().toISOString().slice(0, 10);
+  return `Relatorio_${base}_${hoje}.${ext}`;
+}
+function baixar(formato) {
+  gerarRelatorio();
+  const texto = document.getElementById("relatorio").textContent;
+  let blob;
+  if (formato === "txt") blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+  else if (formato === "rtf") blob = new Blob([gerarRtf(texto)], { type: "application/rtf" });
+  else if (formato === "docx") blob = gerarDocxBlob(texto);
+  else if (formato === "odt") blob = gerarOdtBlob(texto);
+  else return;
+  baixarBlob(blob, nomeArquivo(formato));
+}
+
+// ---------- Inicialização ----------
+document.addEventListener("DOMContentLoaded", () => {
+  chkNA = document.getElementById("estadiamentoNA");
+  campoEstadiamento = document.getElementById("estadiamento");
+  chkNA.addEventListener("change", () => {
+    campoEstadiamento.disabled = chkNA.checked;
+    if (chkNA.checked) campoEstadiamento.value = "";
+  });
+  ["idade", "sexo", "peso", "altura", "creatinina", "formulaSC"].forEach(id => {
+    document.getElementById(id).addEventListener("input", atualizarCalculos);
+    document.getElementById(id).addEventListener("change", atualizarCalculos);
+  });
+
+  // Impede que o navegador memorize/autocomplete dados de paciente digitados
+  document.querySelectorAll("main input, main textarea, main select").forEach(el => {
+    el.setAttribute("autocomplete", "off");
+  });
+
+  inicializarCID();
+  inicializarAreas();
+  adicionarMedicamento();
+});
+</script>
+
+</body>
+</html>
